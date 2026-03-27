@@ -5,40 +5,62 @@ import java.util.Arrays;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-
 
 @Configuration
-@EnableWebMvc
 public class CorsConfig {
 
     private static final Long MAX_AGE = 3600L;
-    private static final int CORS_FILTER_ORDER = -102;
 
     @Bean
-    public FilterRegistrationBean corsFilterRegistration() {
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistration() {
+
         CorsConfiguration config = new CorsConfiguration();
+
+        // allow credentials
         config.setAllowCredentials(true);
-        config.addAllowedOrigin("https://v0-hotel-booking-app-3362.vercel.app/");
+
+        // allowed frontend URLs
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",        // local development
+                "https://your-frontend.vercel.app" // deployed frontend
+        ));
+
+        // allowed headers
         config.setAllowedHeaders(Arrays.asList(
                 HttpHeaders.AUTHORIZATION,
                 HttpHeaders.CONTENT_TYPE,
-                HttpHeaders.ACCEPT));
+                HttpHeaders.ACCEPT
+        ));
+
+        // allowed HTTP methods
         config.setAllowedMethods(Arrays.asList(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
                 HttpMethod.PUT.name(),
-                HttpMethod.DELETE.name()));
+                HttpMethod.DELETE.name(),
+                HttpMethod.OPTIONS.name()
+        ));
+
+        // cache preflight request
         config.setMaxAge(MAX_AGE);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+
+        // apply CORS to all endpoints
         source.registerCorsConfiguration("/**", config);
-        FilterRegistrationBean bean = new FilterRegistrationBean(new CorsFilter(source));
-        bean.setOrder(CORS_FILTER_ORDER);
+
+        FilterRegistrationBean<CorsFilter> bean =
+                new FilterRegistrationBean<>(new CorsFilter(source));
+
+        bean.setOrder(-102);
+
         return bean;
     }
 }
