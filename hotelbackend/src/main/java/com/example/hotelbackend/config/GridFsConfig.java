@@ -18,7 +18,7 @@ public class GridFsConfig {
 
     @Bean
     public GridFSBucket gridFSBucket() {
-        MongoDatabase database = mongoClient.getDatabase("your_database_name"); // your DB name
+        MongoDatabase database = mongoClient.getDatabase("hotelDB"); // your DB name
         return GridFSBuckets.create(database);
     }
 }
