@@ -36,18 +36,27 @@ private final RoomRepository roomRepository;
     }
 
     @Override
-    public void cancelBooking(String bookingId) {
-        BookedRoom booked=bookingRepository.findById(bookingId).get();
-        System.out.println(booked.getCheckInDate()+"and"+booked.getCheckInDate());
-   String id= booked.getRoom().getId();
-    Room room=  roomRepository.findById(id).get();
-   List<BookedRoom> getBook =room.getBookings();
-   getBook.remove(booked);
-   room.setBookings(getBook);
-   roomRepository.save(room);
+  public void cancelBooking(String bookingId) {
 
-        bookingRepository.deleteById(bookingId);
-    }
+    BookedRoom booked = bookingRepository.findById(bookingId)
+            .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+    String roomId = booked.getRoom().getId();
+
+    Room room = roomRepository.findById(roomId)
+            .orElseThrow(() -> new RuntimeException("Room not found"));
+
+    List<BookedRoom> bookings = room.getBookings();
+
+    bookings.removeIf(b -> b.getBookingId().equals(bookingId));
+
+    room.setBookings(bookings);
+
+    roomRepository.save(room);
+
+    bookingRepository.deleteById(bookingId);
+}
+
 
     @Override
     public List<BookedRoom> getAllBookingsByRoomId(String roomId) {
