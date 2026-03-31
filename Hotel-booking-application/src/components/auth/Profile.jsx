@@ -169,28 +169,57 @@ console.log(userId)
 										</tr>
 									</thead>
 									<tbody>
-										{bookings.map((booking, index) => (
-											
-											<tr key={index}>
-												<td>{booking.id}</td>
-												<td>{booking.room.id}</td>
-												<td>{booking.room.roomType}</td>
-												{/* <td>
-													{moment(booking.checkInDate).subtract(1, "month").format("MMM Do, YYYY")}
-												</td>
-												<td>
-													{moment(booking.checkOutDate)
-														.subtract(1, "month")
-														.format("MMM Do, YYYY")}
-												</td> */}
-												
-												<td>{booking.checkInDate[0]+"-"+booking.checkInDate[1]+"-"+booking.checkInDate[2]}</td>
-                                                <td>{booking.checkOutDate[0]+"-"+booking.checkOutDate[1]+"-"+booking.checkOutDate[2]}</td>
+										{bookings.map((booking, index) => {
+    
+    const checkIn = new Date(
+        booking.checkInDate[0],
+        booking.checkInDate[1] - 1,
+        booking.checkInDate[2]
+    )
 
-												<td>{booking.bookingConfirmationCode}</td>
-												<td className="text-success">On-going</td>
-											</tr>
-										))}
+    const checkOut = new Date(
+        booking.checkOutDate[0],
+        booking.checkOutDate[1] - 1,
+        booking.checkOutDate[2]
+    )
+
+    const today = new Date()
+
+    let status = ""
+
+    if (today < checkIn) {
+        status = "Upcoming"
+    } else if (today >= checkIn && today <= checkOut) {
+        status = "On-going"
+    } else {
+        status = "Completed"
+    }
+
+    return (
+        <tr key={index}>
+            <td>{booking.id}</td>
+            <td>{booking.room.id}</td>
+            <td>{booking.room.roomType}</td>
+
+            <td>{booking.checkInDate[0] + "-" + booking.checkInDate[1] + "-" + booking.checkInDate[2]}</td>
+            <td>{booking.checkOutDate[0] + "-" + booking.checkOutDate[1] + "-" + booking.checkOutDate[2]}</td>
+
+            <td>{booking.bookingConfirmationCode}</td>
+
+            <td
+                className={
+                    status === "Completed"
+                        ? "text-danger"
+                        : status === "On-going"
+                        ? "text-success"
+                        : "text-warning"
+                }
+            >
+                {status}
+            </td>
+        </tr>
+    )
+})}
 									</tbody>
 								</table>
 							) : (
