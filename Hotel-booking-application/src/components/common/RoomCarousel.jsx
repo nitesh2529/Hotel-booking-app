@@ -8,41 +8,19 @@ const RoomCarousel = () => {
 	const [errorMessage, setErrorMessage] = useState("")
 	const [isLoading, setIsLoading] = useState(false)
 
-	// useEffect(() => {
-	// 	setIsLoading(true)
-	// 	getAllRooms()
-	// 		.then((data) => {
-	// 			setRooms(data)
-	// 			setIsLoading(false)
-	// 		})
-	// 		.catch((error) => {
-	// 			setErrorMessage(error.message)
-	// 			setIsLoading(false)
-	// 		})
-	// }, [])
-	useEffect(() => {
-  const savedRooms = localStorage.getItem("rooms")
-
-  if (savedRooms) {
-    setRooms(JSON.parse(savedRooms))
-    setIsLoading(false)
-  } else {
-    setIsLoading(true)
-    getAllRooms()
-      .then((data) => {
-        setRooms(data)
-
-        // save data for next navigation
-        localStorage.setItem("rooms", JSON.stringify(data))
-
-        setIsLoading(false)
-      })
-      .catch((error) => {
-        setErrorMessage(error.message)
-        setIsLoading(false)
-      })
-  }
-}, [])
+	 useEffect(() => {
+	 	setIsLoading(true)
+	 	getAllRooms()
+	 		.then((data) => {
+	 			setRooms(data)
+	 			setIsLoading(false)
+	 		})
+			.catch((error) => {
+	 			setErrorMessage(error.message)
+	 			setIsLoading(false)
+			})
+	 }, [])
+	
 
 	if (isLoading) {
 		return <div className="mt-5">Loading rooms....</div>
