@@ -16,45 +16,22 @@ const ExistingRooms = () => {
 	const [errorMessage, setErrorMessage] = useState("")
 	const [successMessage, setSuccessMessage] = useState("")
 
-	// useEffect(() => {
-	// 	fetchRooms()
-	// }, [])
+	 useEffect(() => {
+	 	fetchRooms()
+	 }, [])
 
-	// const fetchRooms = async () => {
-	// 	setIsLoading(true)
-	// 	try {
-	// 		const result = await getAllRooms()
-	// 		setRooms(result)
-	// 		setIsLoading(false)
-	// 	} catch (error) {
-	// 		setErrorMessage(error.message)
-	// 		setIsLoading(false)
-	// 	}
-	// }
-	useEffect(() => {
-  const savedRooms = localStorage.getItem("rooms")
-
-  if (savedRooms) {
-    setRooms(JSON.parse(savedRooms))
-  } else {
-    fetchRooms()
-  }
-}, [])
-
-const fetchRooms = async () => {
-  setIsLoading(true)
-  try {
-    const result = await getAllRooms()
-    setRooms(result)
-
-    localStorage.setItem("rooms", JSON.stringify(result)) // cache data
-
-    setIsLoading(false)
-  } catch (error) {
-    setErrorMessage(error.message)
-    setIsLoading(false)
-  }
-}
+	 const fetchRooms = async () => {
+	 	setIsLoading(true)
+	 	try {
+	      const result = await getAllRooms()
+	 		setRooms(result)
+	 		setIsLoading(false)
+	 	} catch (error) {
+	 		setErrorMessage(error.message)
+	 		setIsLoading(false)
+	 	}
+	 }
+	
 
 	useEffect(() => {
 		if (selectedRoomType === "") {
