@@ -1,23 +1,19 @@
- package com.example.hotelbackend.service;
+package com.example.hotelbackend.service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import org.bson.types.ObjectId;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.example.hotelbackend.exception.ResourceNotFoundException;
 import com.example.hotelbackend.model.Room;
 import com.example.hotelbackend.repository.RoomRepository;
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.model.GridFSFile;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,24 +22,23 @@ import lombok.RequiredArgsConstructor;
 public class RoomService implements IRoomService {
 
     private final RoomRepository roomRepository;
-    private final GridFsTemplate gridFsTemplate;
-    private final GridFSBucket gridFSBucket;
+    private final Cloudinary cloudinary;
 
     @Override
-    public Room addNewRoom(MultipartFile file, String roomType, BigDecimal roomPrice,BigDecimal roomNo) throws IOException {
+    public Room addNewRoom(MultipartFile file, String roomType, BigDecimal roomPrice, BigDecimal roomNo) throws IOException {
 
         Room room = new Room();
         room.setRoomType(roomType.toUpperCase());
         room.setRoomPrice(roomPrice);
         room.setRoomNo(roomNo);
-        // Store image in GridFS
+
         if (file != null && !file.isEmpty()) {
-            ObjectId fileId = gridFsTemplate.store(
-                    file.getInputStream(),
-                    file.getOriginalFilename(),
-                    file.getContentType()
+            Map uploadResult = cloudinary.uploader().upload(
+                    file.getBytes(),
+                    ObjectUtils.asMap("folder", "hotel-rooms")
             );
-            room.setPhotoId(fileId.toString());
+            room.setPhotoUrl((String) uploadResult.get("secure_url"));
+            room.setPhotoPublicId((String) uploadResult.get("public_id"));
         }
 
         return roomRepository.save(room);
@@ -51,51 +46,33 @@ public class RoomService implements IRoomService {
 
     @Override
     public List<Room> getAllRooms() {
-        
         return roomRepository.findAll();
     }
 
+    // No longer needed for byte-streaming — frontend uses room.getPhotoUrl() directly.
+    // Kept only if you still want a redirect-style endpoint; otherwise delete this method
+    // and the controller endpoint that calls it.
     @Override
-    public byte[] getRoomPhotoByRoomId(String roomId) throws IOException {
-
+    public String getRoomPhotoUrl(String roomId) {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
-
-        if (room.getPhotoId() == null) {
-            return null;
-        }
-
-        GridFSFile file = gridFsTemplate.findOne(
-                Query.query(Criteria.where("_id").is(room.getPhotoId()))
-        );
-
-        // if (file == null)
-        //     throw new ResourceNotFoundException("Image not found!");
-
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        gridFSBucket.downloadToStream(file.getObjectId(), os);
-
-        return os.toByteArray();
+        return room.getPhotoUrl();
     }
 
     @Override
-    public void deleteRoom(String roomId) {
-
+    public void deleteRoom(String roomId) throws IOException {
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
 
-        // Delete image from GridFS
-        if (room.getPhotoId() != null) {
-            gridFsTemplate.delete(
-                    Query.query(Criteria.where("_id").is(room.getPhotoId()))
-            );
+        if (room.getPhotoPublicId() != null) {
+            cloudinary.uploader().destroy(room.getPhotoPublicId(), ObjectUtils.emptyMap());
         }
 
         roomRepository.deleteById(roomId);
     }
 
     @Override
-    public Room updateRoom(String roomId, String roomType, BigDecimal roomPrice,BigDecimal roomNo, MultipartFile photo) {
+    public Room updateRoom(String roomId, String roomType, BigDecimal roomPrice, BigDecimal roomNo, MultipartFile photo) {
 
         Room room = roomRepository.findById(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
@@ -103,39 +80,24 @@ public class RoomService implements IRoomService {
         if (roomType != null) room.setRoomType(roomType);
         if (roomPrice != null) room.setRoomPrice(roomPrice);
         if (roomNo != null) room.setRoomNo(roomNo);
-        // Update image
+
         if (photo != null && !photo.isEmpty()) {
-
-            // delete old image
-            if (room.getPhotoId() != null) {
-                gridFsTemplate.delete(
-                        Query.query(Criteria.where("_id").is(room.getPhotoId()))
-                );
-            }
-
-            // upload new image
             try {
-              ObjectId newPhotoId = gridFsTemplate.store(
-                    photo.getInputStream(),
-                    photo.getOriginalFilename(),
-                    photo.getContentType()
-            );
+                if (room.getPhotoPublicId() != null) {
+                    cloudinary.uploader().destroy(room.getPhotoPublicId(), ObjectUtils.emptyMap());
+                }
 
-            room.setPhotoId(newPhotoId.toString());  
-        return roomRepository.save(room);
+                Map uploadResult = cloudinary.uploader().upload(
+                        photo.getBytes(),
+                        ObjectUtils.asMap("folder", "hotel-rooms")
+                );
+
+                room.setPhotoUrl((String) uploadResult.get("secure_url"));
+                room.setPhotoPublicId((String) uploadResult.get("public_id"));
 
             } catch (IOException e) {
-    throw new RuntimeException("Error storing room photo: " + e.getMessage());
-
+                throw new RuntimeException("Error storing room photo: " + e.getMessage());
             }
-
-            // ObjectId newPhotoId = gridFsTemplate.store(
-            //         photo.getInputStream(),
-            //         photo.getOriginalFilename(),
-            //         photo.getContentType()
-            // );
-
-            // room.setPhotoId(newPhotoId.toString());
         }
 
         return roomRepository.save(room);
@@ -154,10 +116,4 @@ public class RoomService implements IRoomService {
                 .distinct()
                 .toList();
     }
-
-    // @Override
-    // public List<Room> getAvailableRooms(LocalDate checkInDate, LocalDate checkOutDate, String roomType) {
-    //     System.out.println(checkInDate);
-    //     return roomRepository.findAvailableRooms(roomType, checkInDate, checkOutDate); // You can implement later
-    // }
 }
