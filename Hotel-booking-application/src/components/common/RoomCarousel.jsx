@@ -8,19 +8,18 @@ const RoomCarousel = () => {
 	const [errorMessage, setErrorMessage] = useState("")
 	const [isLoading, setIsLoading] = useState(false)
 
-	 useEffect(() => {
-	 	setIsLoading(true)
-	 	getAllRooms()
-	 		.then((data) => {
-	 			setRooms(data)
-	 			setIsLoading(false)
-	 		})
-			.catch((error) => {
-	 			setErrorMessage(error.message)
-	 			setIsLoading(false)
+	useEffect(() => {
+		setIsLoading(true)
+		getAllRooms()
+			.then((data) => {
+				setRooms(data)
+				setIsLoading(false)
 			})
-	 }, [])
-	
+			.catch((error) => {
+				setErrorMessage(error.message)
+				setIsLoading(false)
+			})
+	}, [])
 
 	if (isLoading) {
 		return <div className="mt-5">Loading rooms....</div>
@@ -46,7 +45,7 @@ const RoomCarousel = () => {
 											<Link to={`/book-room/${room.id}`}>
 												<Card.Img
 													variant="top"
-													src={`data:image/png;base64, ${room.photo}`}
+													src={room.photo}
 													alt="Room Photo"
 													className="w-100"
 													style={{ height: "200px" }}
@@ -54,7 +53,7 @@ const RoomCarousel = () => {
 											</Link>
 											<Card.Body>
 												<Card.Title className="hotel-color">{room.roomType}</Card.Title>
-												<Card.Title className="room-price">₹{room.roomPrice}/night</Card.Title>
+												<Card.Title className="room-price">${room.roomPrice}/night</Card.Title>
 												<div className="flex-shrink-0">
 													<Link to={`/book-room/${room.id}`} className="btn btn-hotel btn-sm">
 														Book Now
