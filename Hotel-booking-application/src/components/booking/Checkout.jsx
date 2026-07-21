@@ -51,7 +51,7 @@ const Checkout = () => {
 						) : (
 							<div className="room-info">
 								<img
-									src={`data:image/png;base64,${roomInfo.photo}`}
+									src={roomInfo.photo}
 									alt="Room photo"
 									style={{ width: "100%", height: "200px" }}
 								/>
@@ -63,7 +63,7 @@ const Checkout = () => {
 										</tr>
 										<tr>
 											<th>Price per night:</th>
-											<td>₹{roomInfo.roomPrice}</td>
+											<td>${roomInfo.roomPrice}</td>
 										</tr>
 										<tr>
 											<th>Room Service:</th>
