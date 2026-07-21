@@ -1,4 +1,4 @@
-import React, { useContext } from "react"
+import React from "react"
 import { Card, Col } from "react-bootstrap"
 import { Link } from "react-router-dom"
 
@@ -11,7 +11,7 @@ const RoomCard = ({ room }) => {
 						<Link to={`/book-room/${room.id}`}>
 							<Card.Img
 								variant="top"
-								src={`data:image/png;base64, ${room.photo}`}
+								src={room.photo}
 								alt="Room Photo"
 								style={{ width: "100%", maxWidth: "200px", height: "auto" }}
 							/>
