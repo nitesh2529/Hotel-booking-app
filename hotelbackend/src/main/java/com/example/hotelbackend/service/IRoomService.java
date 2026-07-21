@@ -17,11 +17,11 @@ public interface IRoomService {
 
     List<Room> getAllRooms();
 
-    byte[] getRoomPhotoByRoomId(String roomId) throws IOException ;
+    String getRoomPhotoUrl(String roomId);
 
-    void deleteRoom(String roomId);
+    void deleteRoom(String roomId) throws IOException;
 
-    Room updateRoom(String roomId, String roomType, BigDecimal roomPrice,BigDecimal roomNo, MultipartFile photo);
+    Room updateRoom(String roomId, String roomType, BigDecimal roomPrice, BigDecimal roomNo, MultipartFile photo);
 
     Optional<Room> getRoomById(String roomId);
 
